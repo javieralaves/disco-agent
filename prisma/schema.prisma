@@ -1,0 +1,445 @@
+// Disco Database Schema
+// Core models for research interview platform
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ============================================================================
+// User & Authentication
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts Account[]
+  sessions UserSession[]
+  series   Series[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================================================
+// Core Research Models
+// ============================================================================
+
+model Series {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Ownership
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Research definition
+  title             String
+  researchFocus     String          @db.Text
+  context           Json?           // { company, product, assumptions, hypotheses }
+  researchGoals     Json            // Array of goal objects
+  questions         Json            // Array of question objects grouped by goal
+  
+  // Settings
+  inviteLink        String          @unique @default(cuid())
+  consentText       String          @db.Text
+  consentVersion    Int             @default(1)
+  retentionDays     Int             @default(365)
+  isTrusted         Boolean         @default(false) // Skip human-in-loop for actions
+  language          String          @default("en")
+  
+  // Metadata
+  status            SeriesStatus    @default(ACTIVE)
+  estimatedMinutes  Int?
+  incentive         String?
+  
+  // Relations
+  sessions  Session[]
+  themes    Theme[]
+  actions   Action[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("series")
+}
+
+enum SeriesStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Ownership
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  // Participant info
+  participantName  String?
+  participantEmail String?
+  participantId    String?        // Anonymous ID for tracking without PII
+  
+  // Session metadata
+  status           SessionStatus  @default(IN_PROGRESS)
+  mode             InterviewMode  @default(VOICE)
+  language         String         @default("en")
+  startedAt        DateTime       @default(now())
+  completedAt      DateTime?
+  durationMs       Int?
+  
+  // Consent
+  consentVersion   Int
+  consentGivenAt   DateTime
+  consentWithdrawn Boolean        @default(false)
+  
+  // Audio storage
+  audioUrl         String?
+  audioEncrypted   Boolean        @default(true)
+  
+  // AI-generated content
+  summary          Json?          // { problems: [], goals: [], friction: [], opportunities: [] }
+  sentiment        String?        // POSITIVE, NEUTRAL, NEGATIVE
+  suggestedActions Json?          // Array of suggested action objects
+  
+  // Processing status
+  transcribed      Boolean        @default(false)
+  summarized       Boolean        @default(false)
+  embedded         Boolean        @default(false)
+  
+  // Relations
+  turns       Turn[]
+  highlights  Highlight[]
+  evidence    Evidence[]
+  actions     Action[]
+  consents    Consent[]
+
+  @@index([seriesId])
+  @@index([status])
+  @@index([participantId])
+  @@map("sessions")
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  FAILED
+}
+
+enum InterviewMode {
+  VOICE
+  TEXT
+  HYBRID
+}
+
+model Turn {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Ownership
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Turn metadata
+  turnIndex   Int                     // Sequential order in conversation
+  speaker     Speaker
+  tStartMs    Int                     // Timestamp in milliseconds from session start
+  tEndMs      Int?
+  
+  // Content
+  text        String   @db.Text
+  redacted    Boolean  @default(false)
+  redactions  Json?                   // Array of redaction objects { start, end, type }
+  
+  // Embeddings for RAG
+  embedding   Unsupported("vector(3072)")?  // text-embedding-3-large dimension
+  
+  // Relations
+  evidence    Evidence[]
+
+  @@index([sessionId, tStartMs])
+  @@index([sessionId, turnIndex])
+  @@map("turns")
+}
+
+enum Speaker {
+  AI
+  PARTICIPANT
+}
+
+model Highlight {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Ownership
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Content
+  quote       String   @db.Text
+  tStartMs    Int
+  tEndMs      Int
+  context     String?  @db.Text        // Surrounding context for clarity
+  
+  // AI metadata
+  category    String?                  // e.g., "pain_point", "feature_request", "praise"
+  importance  Float?                   // 0-1 score
+  
+  // Embeddings
+  embedding   Unsupported("vector(3072)")?
+  
+  // Relations
+  evidence    Evidence[]
+
+  @@index([sessionId])
+  @@map("highlights")
+}
+
+model Theme {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Ownership
+  seriesId    String
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  // Content
+  title       String
+  rationale   String   @db.Text
+  factors     Json?                    // Array of contributing factors
+  
+  // Confidence calculation
+  confidence  Float                    // 0-1 score
+  sessionCount Int     @default(0)
+  evidenceCount Int    @default(0)
+  
+  // Confidence components
+  volumeScore      Float?
+  diversityScore   Float?
+  recencyScore     Float?
+  consistencyScore Float?
+  contradictionScore Float?
+  
+  // Proposed actions
+  experiments      Json?               // Array of experiment suggestions
+  
+  // Relations
+  evidence    Evidence[]
+
+  @@index([seriesId])
+  @@index([confidence])
+  @@map("themes")
+}
+
+model Evidence {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Link theme to source
+  themeId     String
+  theme       Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Source can be either a Turn or a Highlight
+  turnId      String?
+  turn        Turn?    @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  
+  highlightId String?
+  highlight   Highlight? @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  relevance   Float?                   // How relevant this evidence is to the theme
+
+  @@index([themeId])
+  @@index([sessionId])
+  @@map("evidence")
+}
+
+model Action {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  executedAt  DateTime?
+  
+  // Source
+  seriesId    String?
+  series      Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  sessionId   String?
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Action details
+  type        ActionType
+  tool        String                   // e.g., "slack.postMessage", "linear.createIssue"
+  params      Json                     // Tool-specific parameters
+  
+  // Status
+  status      ActionStatus @default(PENDING)
+  result      Json?                    // Result from tool execution
+  error       String?      @db.Text
+  
+  // Human-in-loop
+  approvedBy  String?
+  approvedAt  DateTime?
+
+  @@index([seriesId])
+  @@index([sessionId])
+  @@index([status])
+  @@map("actions")
+}
+
+enum ActionType {
+  SLACK_MESSAGE
+  LINEAR_ISSUE
+  NOTION_PAGE
+  CALENDAR_EVENT
+  FOLLOW_UP_INTERVIEW
+}
+
+enum ActionStatus {
+  PENDING
+  APPROVED
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+model Consent {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  version     Int
+  givenAt     DateTime
+  withdrawnAt DateTime?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+
+  @@index([sessionId])
+  @@map("consents")
+}
+
+// ============================================================================
+// Background Jobs & Observability
+// ============================================================================
+
+model Job {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Job identification
+  type        String                   // e.g., "transcribe", "summarize", "embed"
+  sessionId   String?
+  
+  // Status
+  status      JobStatus @default(PENDING)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  
+  // Execution
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?   @db.Text
+  result      Json?
+  
+  // Idempotency
+  idempotencyKey String  @unique
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([type])
+  @@map("jobs")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Context
+  userId      String?
+  sessionId   String?
+  seriesId    String?
+  
+  // Event
+  action      String
+  resource    String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
