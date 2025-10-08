@@ -60,12 +60,22 @@ export default function NewSeriesPage() {
     setSeriesData({ ...seriesData, ...data });
   };
 
-  const handleComplete = async () => {
+  const handleComplete = async (finalQuestions?: any[]) => {
     try {
+      // Use the provided questions or fall back to seriesData.questions
+      const dataToSend = {
+        ...seriesData,
+        questions:
+          finalQuestions !== undefined ? finalQuestions : seriesData.questions,
+      };
+
+      console.log("🚀 Wizard - handleComplete called");
+      console.log("  - Final data questions:", dataToSend.questions?.length);
+
       const response = await fetch("/api/series/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(seriesData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {

@@ -15,6 +15,12 @@ export async function POST(req: Request) {
     const { title, researchFocus, context, researchGoals, questions } =
       await req.json();
 
+    console.log("📝 Creating series with data:");
+    console.log("  - Title:", title);
+    console.log("  - Research Goals:", researchGoals?.length);
+    console.log("  - Questions:", questions?.length);
+    console.log("  - Questions preview:", questions?.slice(0, 2));
+
     if (!title || !researchFocus || !researchGoals || !questions) {
       return NextResponse.json(
         { error: "Missing required fields" },

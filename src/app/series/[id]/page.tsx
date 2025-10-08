@@ -52,7 +52,7 @@ export default async function SeriesDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const inviteUrl = `${process.env.NEXTAUTH_URL}/invite/${series.inviteLink}`;
+  const inviteUrl = `${process.env.NEXTAUTH_URL}/interview/${series.inviteLink}`;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">

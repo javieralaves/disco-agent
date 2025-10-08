@@ -77,38 +77,38 @@ model VerificationToken {
 // ============================================================================
 
 model Series {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Ownership
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Research definition
-  title             String
-  researchFocus     String          @db.Text
-  context           Json?           // { company, product, assumptions, hypotheses }
-  researchGoals     Json            // Array of goal objects
-  questions         Json            // Array of question objects grouped by goal
-  
+  title         String
+  researchFocus String @db.Text
+  context       Json? // { company, product, assumptions, hypotheses }
+  researchGoals Json // Array of goal objects
+  questions     Json // Array of question objects grouped by goal
+
   // Settings
-  inviteLink        String          @unique @default(cuid())
-  consentText       String          @db.Text
-  consentVersion    Int             @default(1)
-  retentionDays     Int             @default(365)
-  isTrusted         Boolean         @default(false) // Skip human-in-loop for actions
-  language          String          @default("en")
-  
+  inviteLink     String  @unique @default(cuid())
+  consentText    String  @db.Text
+  consentVersion Int     @default(1)
+  retentionDays  Int     @default(365)
+  isTrusted      Boolean @default(false) // Skip human-in-loop for actions
+  language       String  @default("en")
+
   // Metadata
-  status            SeriesStatus    @default(ACTIVE)
-  estimatedMinutes  Int?
-  incentive         String?
-  
+  status           SeriesStatus @default(ACTIVE)
+  estimatedMinutes Int?
+  incentive        String?
+
   // Relations
-  sessions  Session[]
-  themes    Theme[]
-  actions   Action[]
+  sessions Session[]
+  themes   Theme[]
+  actions  Action[]
 
   @@index([userId])
   @@index([status])
@@ -124,52 +124,52 @@ enum SeriesStatus {
 }
 
 model Session {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Ownership
-  seriesId    String
-  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  
+  seriesId String
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
   // Participant info
   participantName  String?
   participantEmail String?
-  participantId    String?        // Anonymous ID for tracking without PII
-  
+  participantId    String? // Anonymous ID for tracking without PII
+
   // Session metadata
-  status           SessionStatus  @default(IN_PROGRESS)
-  mode             InterviewMode  @default(VOICE)
-  language         String         @default("en")
-  startedAt        DateTime       @default(now())
-  completedAt      DateTime?
-  durationMs       Int?
-  
+  status      SessionStatus @default(SCHEDULED)
+  mode        InterviewMode @default(VOICE)
+  language    String        @default("en")
+  startedAt   DateTime?
+  completedAt DateTime?
+  durationMs  Int?
+
   // Consent
   consentVersion   Int
   consentGivenAt   DateTime
-  consentWithdrawn Boolean        @default(false)
-  
+  consentWithdrawn Boolean  @default(false)
+
   // Audio storage
-  audioUrl         String?
-  audioEncrypted   Boolean        @default(true)
-  
+  audioUrl       String?
+  audioEncrypted Boolean @default(true)
+
   // AI-generated content
-  summary          Json?          // { problems: [], goals: [], friction: [], opportunities: [] }
-  sentiment        String?        // POSITIVE, NEUTRAL, NEGATIVE
-  suggestedActions Json?          // Array of suggested action objects
-  
+  summary          Json? // { problems: [], goals: [], friction: [], opportunities: [] }
+  sentiment        String? // POSITIVE, NEUTRAL, NEGATIVE
+  suggestedActions Json? // Array of suggested action objects
+
   // Processing status
-  transcribed      Boolean        @default(false)
-  summarized       Boolean        @default(false)
-  embedded         Boolean        @default(false)
-  
+  transcribed Boolean @default(false)
+  summarized  Boolean @default(false)
+  embedded    Boolean @default(false)
+
   // Relations
-  turns       Turn[]
-  highlights  Highlight[]
-  evidence    Evidence[]
-  actions     Action[]
-  consents    Consent[]
+  turns      Turn[]
+  highlights Highlight[]
+  evidence   Evidence[]
+  actions    Action[]
+  consents   Consent[]
 
   @@index([seriesId])
   @@index([status])
@@ -178,10 +178,11 @@ model Session {
 }
 
 enum SessionStatus {
-  IN_PROGRESS
-  COMPLETED
-  ABANDONED
-  FAILED
+  SCHEDULED // Consent given, waiting to start
+  IN_PROGRESS // Interview is active
+  COMPLETED // Successfully finished
+  ABANDONED // User left before completing
+  FAILED // Technical error occurred
 }
 
 enum InterviewMode {
@@ -191,29 +192,29 @@ enum InterviewMode {
 }
 
 model Turn {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
   // Ownership
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Turn metadata
-  turnIndex   Int                     // Sequential order in conversation
-  speaker     Speaker
-  tStartMs    Int                     // Timestamp in milliseconds from session start
-  tEndMs      Int?
-  
+  turnIndex Int // Sequential order in conversation
+  speaker   Speaker
+  tStartMs  Int // Timestamp in milliseconds from session start
+  tEndMs    Int?
+
   // Content
-  text        String   @db.Text
-  redacted    Boolean  @default(false)
-  redactions  Json?                   // Array of redaction objects { start, end, type }
-  
+  text       String  @db.Text
+  redacted   Boolean @default(false)
+  redactions Json? // Array of redaction objects { start, end, type }
+
   // Embeddings for RAG
-  embedding   Unsupported("vector(3072)")?  // text-embedding-3-large dimension
-  
+  embedding Unsupported("vector(3072)")? // text-embedding-3-large dimension
+
   // Relations
-  evidence    Evidence[]
+  evidence Evidence[]
 
   @@index([sessionId, tStartMs])
   @@index([sessionId, turnIndex])
@@ -226,64 +227,64 @@ enum Speaker {
 }
 
 model Highlight {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
   // Ownership
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Content
-  quote       String   @db.Text
-  tStartMs    Int
-  tEndMs      Int
-  context     String?  @db.Text        // Surrounding context for clarity
-  
+  quote    String  @db.Text
+  tStartMs Int
+  tEndMs   Int
+  context  String? @db.Text // Surrounding context for clarity
+
   // AI metadata
-  category    String?                  // e.g., "pain_point", "feature_request", "praise"
-  importance  Float?                   // 0-1 score
-  
+  category   String? // e.g., "pain_point", "feature_request", "praise"
+  importance Float? // 0-1 score
+
   // Embeddings
-  embedding   Unsupported("vector(3072)")?
-  
+  embedding Unsupported("vector(3072)")?
+
   // Relations
-  evidence    Evidence[]
+  evidence Evidence[]
 
   @@index([sessionId])
   @@map("highlights")
 }
 
 model Theme {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Ownership
-  seriesId    String
-  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  
+  seriesId String
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
   // Content
-  title       String
-  rationale   String   @db.Text
-  factors     Json?                    // Array of contributing factors
-  
+  title     String
+  rationale String @db.Text
+  factors   Json? // Array of contributing factors
+
   // Confidence calculation
-  confidence  Float                    // 0-1 score
-  sessionCount Int     @default(0)
-  evidenceCount Int    @default(0)
-  
+  confidence    Float // 0-1 score
+  sessionCount  Int   @default(0)
+  evidenceCount Int   @default(0)
+
   // Confidence components
-  volumeScore      Float?
-  diversityScore   Float?
-  recencyScore     Float?
-  consistencyScore Float?
+  volumeScore        Float?
+  diversityScore     Float?
+  recencyScore       Float?
+  consistencyScore   Float?
   contradictionScore Float?
-  
+
   // Proposed actions
-  experiments      Json?               // Array of experiment suggestions
-  
+  experiments Json? // Array of experiment suggestions
+
   // Relations
-  evidence    Evidence[]
+  evidence Evidence[]
 
   @@index([seriesId])
   @@index([confidence])
@@ -291,25 +292,25 @@ model Theme {
 }
 
 model Evidence {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
   // Link theme to source
-  themeId     String
-  theme       Theme    @relation(fields: [themeId], references: [id], onDelete: Cascade)
-  
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  themeId String
+  theme   Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Source can be either a Turn or a Highlight
-  turnId      String?
-  turn        Turn?    @relation(fields: [turnId], references: [id], onDelete: Cascade)
-  
+  turnId String?
+  turn   Turn?   @relation(fields: [turnId], references: [id], onDelete: Cascade)
+
   highlightId String?
   highlight   Highlight? @relation(fields: [highlightId], references: [id], onDelete: Cascade)
-  
+
   // Metadata
-  relevance   Float?                   // How relevant this evidence is to the theme
+  relevance Float? // How relevant this evidence is to the theme
 
   @@index([themeId])
   @@index([sessionId])
@@ -317,30 +318,30 @@ model Evidence {
 }
 
 model Action {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  executedAt  DateTime?
-  
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  executedAt DateTime?
+
   // Source
-  seriesId    String?
-  series      Series?  @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  
-  sessionId   String?
-  session     Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  seriesId String?
+  series   Series? @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   // Action details
-  type        ActionType
-  tool        String                   // e.g., "slack.postMessage", "linear.createIssue"
-  params      Json                     // Tool-specific parameters
-  
+  type   ActionType
+  tool   String // e.g., "slack.postMessage", "linear.createIssue"
+  params Json // Tool-specific parameters
+
   // Status
-  status      ActionStatus @default(PENDING)
-  result      Json?                    // Result from tool execution
-  error       String?      @db.Text
-  
+  status ActionStatus @default(PENDING)
+  result Json? // Result from tool execution
+  error  String?      @db.Text
+
   // Human-in-loop
-  approvedBy  String?
-  approvedAt  DateTime?
+  approvedBy String?
+  approvedAt DateTime?
 
   @@index([seriesId])
   @@index([sessionId])
@@ -365,17 +366,17 @@ enum ActionStatus {
 }
 
 model Consent {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   version     Int
   givenAt     DateTime
   withdrawnAt DateTime?
   ipAddress   String?
-  userAgent   String?  @db.Text
+  userAgent   String?   @db.Text
 
   @@index([sessionId])
   @@map("consents")
@@ -386,27 +387,27 @@ model Consent {
 // ============================================================================
 
 model Job {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Job identification
-  type        String                   // e.g., "transcribe", "summarize", "embed"
-  sessionId   String?
-  
+  type      String // e.g., "transcribe", "summarize", "embed"
+  sessionId String?
+
   // Status
   status      JobStatus @default(PENDING)
   attempts    Int       @default(0)
   maxAttempts Int       @default(3)
-  
+
   // Execution
   startedAt   DateTime?
   completedAt DateTime?
   error       String?   @db.Text
   result      Json?
-  
+
   // Idempotency
-  idempotencyKey String  @unique
+  idempotencyKey String @unique
 
   @@index([sessionId])
   @@index([status])
@@ -423,20 +424,20 @@ enum JobStatus {
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
   // Context
-  userId      String?
-  sessionId   String?
-  seriesId    String?
-  
+  userId    String?
+  sessionId String?
+  seriesId  String?
+
   // Event
-  action      String
-  resource    String
-  details     Json?
-  ipAddress   String?
-  userAgent   String?  @db.Text
+  action    String
+  resource  String
+  details   Json?
+  ipAddress String?
+  userAgent String? @db.Text
 
   @@index([userId])
   @@index([sessionId])

@@ -23,7 +23,7 @@ interface Question {
 interface QuestionsStepProps {
   data: any;
   onUpdate: (data: any) => void;
-  onComplete: () => void;
+  onComplete: (questions?: any[]) => void;
   onBack: () => void;
 }
 
@@ -94,10 +94,18 @@ export function QuestionsStep({
 
   const handleComplete = async () => {
     setIsCompleting(true);
+    console.log("🔍 QuestionsStep - handleComplete called");
+    console.log("  - Questions to save:", questions.length);
+
+    // Update parent state with questions
     onUpdate({ questions });
+
+    // Small delay for UI feedback
     await new Promise((resolve) => setTimeout(resolve, 300));
     setIsCompleting(false);
-    onComplete();
+
+    // Pass questions directly to avoid race condition
+    onComplete(questions);
   };
 
   // Group questions by goal
