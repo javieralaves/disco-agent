@@ -10,11 +10,14 @@
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx scripts/seed.ts",
     "db:reset": "prisma migrate reset",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "deploy:setup": "bash scripts/setup-github-secrets.sh",
+    "deploy:check": "npm run build && npm run lint"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.44",
