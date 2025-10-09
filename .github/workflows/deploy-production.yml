@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,8 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -27,7 +27,18 @@ jobs:
         run: npx prisma generate
 
       - name: Run database migrations
-        run: npx prisma migrate deploy
+        run: |
+          # Add connection timeout to database URLs
+          export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          export DIRECT_DATABASE_URL="${{ secrets.DIRECT_DATABASE_URL }}"
+          
+          # Add sslmode=require if not present
+          if [[ ! "$DIRECT_DATABASE_URL" =~ "sslmode=" ]]; then
+            export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL}?sslmode=require"
+          fi
+          
+          # Run migration with retries
+          npx prisma migrate deploy --schema=./prisma/schema.prisma
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
@@ -38,5 +49,4 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-
+          vercel-args: "--prod"
