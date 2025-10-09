@@ -129,98 +129,91 @@ This plan builds Disco incrementally, starting with core infrastructure and prog
 
 ---
 
-## Phase 4: Background Processing (Days 11-12)
+## Phase 4: Session Summarization (Days 11-12) ✅
 
-### 4.1 Job Queue Setup
+### 4.1 Summarization API Endpoint ✅
 
-- [ ] Install and configure Inngest or Vercel Queues
-- [ ] Create job pipeline: `ingest → transcribe → summarize → embed → theme update`
-- [ ] Implement idempotent job handlers with retry logic
-- **Success check**: Jobs can be enqueued and executed; retries work on failure
+- [x] Create `/api/session/summarize` endpoint
+- [x] Build GPT-4o prompt for structured summary (Problems/Goals/Friction/Opportunities)
+- [x] Generate session highlights (top 3-5 quotes)
+- [x] Extract suggested actions with rationale
+- [x] Update Session record with summary data
+- **Success check**: ✅ Session has summary, highlights, sentiment, and suggested actions in DB
 
-### 4.2 Transcription Job
+### 4.2 Sessions List View ✅
 
-- [ ] Implement transcription using gpt-4o-mini-transcribe (fallback: Whisper)
-- [ ] Update Turn records with refined transcripts
-- [ ] Handle timestamp alignment
-- **Success check**: Raw audio transcribed; Turn.text updated with timestamps
+- [x] Create `/dashboard/sessions` page
+- [x] Display sessions list with metadata (participant, duration, turns)
+- [x] Show summarization status badges
+- [x] Add links to session details
+- **Success check**: ✅ All completed sessions visible; status clearly indicated
 
-### 4.3 Summarization Job
+### 4.3 Session Detail View ✅
 
-- [ ] Create GPT-4o prompt for structured summary (Problems/Goals/Friction/Opportunities)
-- [ ] Generate session highlights (top 3-5 quotes)
-- [ ] Extract suggested actions
-- [ ] Update Session record with summary data
-- **Success check**: Session has summary, highlights, and suggested actions in DB
+- [x] Create `/dashboard/sessions/[id]` page
+- [x] Display full transcript with speaker identification
+- [x] Show structured summary (Problems/Goals/Friction/Opportunities)
+- [x] List highlights with supporting quotes
+- [x] Display suggested actions with priorities
+- [x] Add sentiment badge
+- **Success check**: ✅ Complete session view with AI-powered insights
 
-### 4.4 Embedding Job
+### 4.4 Manual Summarization Trigger ✅
 
-- [ ] Generate embeddings for each Turn using text-embedding-3-large
-- [ ] Store embeddings in pgvector columns
-- [ ] Create vector index for similarity search
-- **Success check**: Turn embeddings stored; similarity queries return relevant results
+- [x] Create "Generate Summary" button component
+- [x] Implement loading states and error handling
+- [x] Auto-refresh page after completion
+- **Success check**: ✅ On-demand summarization works; UI updates automatically
 
-### 4.5 Theme Update Job
+### 4.5 Navigation Enhancement ✅
 
-- [ ] Analyze all sessions in series for recurring patterns
-- [ ] Create/update Theme records with confidence scores
-- [ ] Link Evidence records (Theme ↔ Turn/Highlight)
-- [ ] Calculate confidence: volume × diversity × recency × consistency − contradiction
-- **Success check**: Themes auto-generated; confidence scores calculated; evidence linked
+- [x] Add "Sessions" link to sidebar
+- [x] Update navigation highlighting
+- **Success check**: ✅ Sessions accessible from main navigation
 
----
+**Deferred to Post-MVP:**
 
-## Phase 5: Session Review (Days 13-14)
-
-### 5.1 Sessions List View
-
-- [ ] Create `/series/[id]/sessions` page
-- [ ] Display sessions table: summary line, duration, highlights, sentiment
-- [ ] Add filters (date, completion status, sentiment)
-- [ ] Implement sorting and pagination
-- **Success check**: All sessions visible; filtering and sorting work
-
-### 5.2 Session Detail View
-
-- [ ] Create `/session/[id]` page
-- [ ] Display full transcript with timestamp navigation
-- [ ] Show structured summary (Problems/Goals/Friction/Opportunities)
-- [ ] List highlights with copy-to-clipboard buttons
-- [ ] Display suggested actions
-- **Success check**: Transcript readable; can copy individual turns; highlights visible
-
-### 5.3 Transcript Interactions
-
-- [ ] Add turn-level copy-to-clipboard
-- [ ] Implement jump-to-timestamp functionality
-- [ ] Highlight search within transcript
-- **Success check**: Can copy any turn; clicking timestamp plays audio at that point
+- Embeddings for semantic search
+- Background job queue (using simple API endpoints for now)
+- Batch processing of multiple sessions
+- Theme synthesis (moved to Phase 5)
 
 ---
 
-## Phase 6: Themes & Synthesis (Days 15-16)
+## Phase 5: Theme Synthesis (Days 13-14) ✅
 
-### 6.1 Theme Board
+### 5.1 Theme Generation API ✅
 
-- [ ] Create `/themes` page showing all themes across all series
-- [ ] Display theme cards: title, confidence %, session count, top quote
-- [ ] Add filters by series, confidence level, date range
-- **Success check**: Themes visible; filtering works; confidence % accurate
+- [x] Create `/api/series/generate-themes` endpoint
+- [x] Use GPT-4o to analyze patterns across sessions
+- [x] Extract evidence with specific quotes
+- [x] Calculate confidence scores (volume, diversity, recency, consistency)
+- [x] Create Theme and Evidence records
+- **Success check**: ✅ Themes generated with multi-factor confidence scoring
 
-### 6.2 Theme Detail Page
+### 5.2 Themes List Page ✅
 
-- [ ] Create `/theme/[id]` page
-- [ ] Display rationale and contributing factors
-- [ ] List evidence with jump-to citations (e.g., `[S12@03:14]`)
-- [ ] Show proposed experiments
-- **Success check**: Theme rationale clear; evidence clickable; leads to session/turn
+- [x] Create `/dashboard/themes` page showing all themes
+- [x] Display theme cards with confidence %, session count, evidence count
+- [x] Color-coded confidence badges (green/blue/yellow)
+- [x] Sort by confidence (highest first)
+- **Success check**: ✅ Themes visible with color-coded confidence
 
-### 6.3 Confidence Calculation Refinement
+### 5.3 Theme Detail Page ✅
 
-- [ ] Implement detailed confidence algorithm
-- [ ] Add visual indicators for confidence levels
-- [ ] Show confidence breakdown tooltip (volume, diversity, etc.)
-- **Success check**: Confidence scores are accurate and explainable
+- [x] Create `/dashboard/themes/[id]` page
+- [x] Display rationale and contributing factors
+- [x] Show confidence breakdown (volume, diversity, consistency)
+- [x] List evidence organized by session with quotes
+- [x] Link to source sessions
+- **Success check**: ✅ Complete theme view with evidence traceability
+
+### 5.4 Theme Generation Trigger ✅
+
+- [x] Add "Generate Themes" button to series detail page
+- [x] Implement loading states and error handling
+- [x] Auto-navigate to themes page after completion
+- **Success check**: ✅ One-click theme generation from series page
 
 ---
 

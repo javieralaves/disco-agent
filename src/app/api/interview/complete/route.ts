@@ -12,10 +12,7 @@ export async function POST(req: NextRequest) {
     const { sessionId } = body;
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing sessionId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
     }
 
     // Get the session
@@ -24,10 +21,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!session) {
-      return NextResponse.json(
-        { error: "Session not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
     // Calculate session duration
@@ -50,6 +44,21 @@ export async function POST(req: NextRequest) {
     console.log(`  - Started: ${startTime.toISOString()}`);
     console.log(`  - Completed: ${endTime.toISOString()}`);
 
+    // Trigger background summarization (fire-and-forget)
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    fetch(`${baseUrl}/api/session/summarize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    }).catch((error) => {
+      console.error("Background summarization failed:", error);
+      // Don't throw - this is a background task
+    });
+
+    console.log(
+      `🔄 Background summarization triggered for session: ${sessionId}`
+    );
+
     return NextResponse.json(
       { success: true, session: updatedSession },
       { status: 200 }
@@ -62,4 +71,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

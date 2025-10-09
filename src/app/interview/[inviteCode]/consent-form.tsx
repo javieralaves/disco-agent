@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, ChevronRight } from "lucide-react";
 
@@ -29,6 +30,7 @@ export function ConsentForm({
   consentVersion,
 }: ConsentFormProps) {
   const router = useRouter();
+  const [participantName, setParticipantName] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,7 @@ export function ConsentForm({
         body: JSON.stringify({
           seriesId,
           consentVersion,
+          participantName: participantName.trim() || undefined,
         }),
       });
 
@@ -99,6 +102,24 @@ export function ConsentForm({
             and data will be stored securely for {/* Will be dynamic */}90 days.
           </AlertDescription>
         </Alert>
+
+        {/* Participant Name */}
+        <div className="space-y-2">
+          <Label htmlFor="participantName" className="text-sm font-medium">
+            Your Name (Optional)
+          </Label>
+          <Input
+            id="participantName"
+            type="text"
+            placeholder="Enter your name"
+            value={participantName}
+            onChange={(e) => setParticipantName(e.target.value)}
+            className="w-full"
+          />
+          <p className="text-xs text-gray-500">
+            This helps us organize and reference your interview
+          </p>
+        </div>
 
         {/* Consent Checkbox */}
         <div className="flex items-start space-x-3 rounded-lg border bg-white p-4">

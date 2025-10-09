@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { seriesId, consentVersion } = await req.json();
+    const { seriesId, consentVersion, participantName } = await req.json();
 
     if (!seriesId || consentVersion === undefined) {
       return NextResponse.json(
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       data: {
         seriesId,
         participantId,
+        participantName: participantName || undefined,
         consentVersion,
         consentGivenAt: new Date(),
         status: SessionStatus.SCHEDULED, // Will become IN_PROGRESS when interview starts

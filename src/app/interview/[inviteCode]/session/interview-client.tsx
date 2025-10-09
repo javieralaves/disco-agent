@@ -19,6 +19,7 @@ import {
   Loader2,
   MessageSquare,
   X,
+  ArrowDown,
 } from "lucide-react";
 
 interface Turn {
@@ -41,8 +42,11 @@ export function InterviewClient({ inviteCode }: InterviewClientProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [aiSpeaking, setAiSpeaking] = useState(false);
   const [currentAITranscript, setCurrentAITranscript] = useState<string>("");
+  const [showJumpToBottom, setShowJumpToBottom] = useState(false);
 
   const sessionIdRef = useRef<string | null>(null);
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const isUserScrolledUpRef = useRef<boolean>(false);
   const wsRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -82,6 +86,39 @@ export function InterviewClient({ inviteCode }: InterviewClientProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
+
+  // Auto-scroll to bottom when transcript updates (unless user scrolled up)
+  useEffect(() => {
+    if (transcriptRef.current && !isUserScrolledUpRef.current) {
+      transcriptRef.current.scrollTo({
+        top: transcriptRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [transcript]);
+
+  // Handle scroll to detect if user scrolled up
+  const handleScroll = () => {
+    if (!transcriptRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = transcriptRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50; // 50px threshold
+
+    isUserScrolledUpRef.current = !isAtBottom;
+    setShowJumpToBottom(!isAtBottom);
+  };
+
+  // Jump to bottom function
+  const jumpToBottom = () => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTo({
+        top: transcriptRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+      isUserScrolledUpRef.current = false;
+      setShowJumpToBottom(false);
+    }
+  };
 
   const initializeInterview = async (sessionId: string) => {
     try {
@@ -578,8 +615,12 @@ export function InterviewClient({ inviteCode }: InterviewClientProps) {
                 Real-time transcript of your interview
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="max-h-96 space-y-4 overflow-y-auto">
+            <CardContent className="relative">
+              <div
+                ref={transcriptRef}
+                onScroll={handleScroll}
+                className="max-h-96 space-y-4 overflow-y-auto"
+              >
                 {transcript.length === 0 ? (
                   <p className="text-center text-sm text-muted-foreground">
                     Start speaking to begin the interview...
@@ -616,6 +657,17 @@ export function InterviewClient({ inviteCode }: InterviewClientProps) {
                   ))
                 )}
               </div>
+
+              {/* Jump to Bottom Button */}
+              {showJumpToBottom && (
+                <Button
+                  size="sm"
+                  onClick={jumpToBottom}
+                  className="absolute bottom-4 right-4 rounded-full shadow-lg"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              )}
             </CardContent>
           </Card>
 

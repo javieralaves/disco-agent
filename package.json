@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "prisma generate && next build",
+    "vercel-build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
@@ -33,6 +34,7 @@
     "ai": "^5.0.60",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "inngest": "^3.44.2",
     "lucide-react": "^0.545.0",
     "next": "15.5.4",

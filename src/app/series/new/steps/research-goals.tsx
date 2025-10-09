@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,12 +31,15 @@ export function ResearchGoalsStep({
   const [newGoal, setNewGoal] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasGeneratedRef = useRef(false);
 
-  // Auto-generate goals on mount if none exist
+  // Auto-generate goals on mount if none exist and haven't generated yet
   useEffect(() => {
-    if (goals.length === 0 && data.researchFocus) {
+    if (goals.length === 0 && data.researchFocus && !hasGeneratedRef.current) {
+      hasGeneratedRef.current = true;
       generateGoals();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateGoals = async () => {
@@ -105,7 +108,7 @@ export function ResearchGoalsStep({
       )}
 
       {/* Generated Goals */}
-      {goals.length > 0 && (
+      {(goals.length > 0 || isGenerating) && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>

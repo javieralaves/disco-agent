@@ -11,9 +11,22 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CopyButton } from "@/components/copy-button";
-import { ArrowLeft, ExternalLink, Users, MessageSquare } from "lucide-react";
+import { GenerateThemesButton } from "@/components/generate-themes-button";
+import { SeriesStatusToggle } from "@/components/series-status-toggle";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Users,
+  MessageSquare,
+  Clock,
+  TrendingUp,
+  AlertCircle,
+  Mic,
+} from "lucide-react";
 import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -34,6 +47,33 @@ export default async function SeriesDetailPage({ params }: PageProps) {
         select: {
           sessions: true,
           themes: true,
+        },
+      },
+      sessions: {
+        select: {
+          id: true,
+          participantName: true,
+          participantId: true,
+          status: true,
+          completedAt: true,
+          durationMs: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+      themes: {
+        select: {
+          id: true,
+          title: true,
+          confidence: true,
+          sessionCount: true,
+          evidenceCount: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          confidence: "desc",
         },
       },
     },
@@ -70,9 +110,10 @@ export default async function SeriesDetailPage({ params }: PageProps) {
               Created {new Date(series.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <Badge variant={series.status === "active" ? "default" : "secondary"}>
-            {series.status}
-          </Badge>
+          <SeriesStatusToggle
+            seriesId={series.id}
+            currentStatus={series.status}
+          />
         </div>
       </header>
 
@@ -130,6 +171,31 @@ export default async function SeriesDetailPage({ params }: PageProps) {
                     </a>
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Theme Generation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Theme Analysis</CardTitle>
+                <CardDescription>
+                  Discover patterns across interview sessions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {series._count.sessions < 2 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Record at least 2 sessions to generate themes
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <GenerateThemesButton
+                    seriesId={series.id}
+                    sessionCount={series._count.sessions}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -202,6 +268,127 @@ export default async function SeriesDetailPage({ params }: PageProps) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Sessions */}
+            {series.sessions.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mic className="h-5 w-5 text-indigo-500" />
+                    Sessions ({series.sessions.length})
+                  </CardTitle>
+                  <CardDescription>
+                    View all interview sessions for this series
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {series.sessions.map((session) => (
+                      <Link
+                        key={session.id}
+                        href={`/sessions/${session.id}`}
+                        className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <p className="font-medium text-sm">
+                              {session.participantName ||
+                                session.participantId ||
+                                "Anonymous"}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <Clock className="h-3 w-3" />
+                              {session.completedAt
+                                ? formatDistanceToNow(
+                                    new Date(session.completedAt),
+                                    { addSuffix: true }
+                                  )
+                                : formatDistanceToNow(
+                                    new Date(session.createdAt),
+                                    { addSuffix: true }
+                                  )}
+                              {session.durationMs && (
+                                <span>
+                                  • {Math.round(session.durationMs / 1000 / 60)}{" "}
+                                  min
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={
+                            session.status === "COMPLETED"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {session.status}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Themes */}
+            {series.themes.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-indigo-500" />
+                    Discovered Themes ({series.themes.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Patterns identified across sessions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {series.themes.map((theme) => {
+                      const confidencePercent = Math.round(
+                        theme.confidence * 100
+                      );
+                      const confidenceColor =
+                        confidencePercent >= 75
+                          ? "text-green-700 bg-green-50 border-green-200"
+                          : confidencePercent >= 50
+                          ? "text-blue-700 bg-blue-50 border-blue-200"
+                          : "text-yellow-700 bg-yellow-50 border-yellow-200";
+
+                      return (
+                        <Link
+                          key={theme.id}
+                          href={`/themes/${theme.id}`}
+                          className="block rounded-lg border p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm mb-1">
+                                {theme.title}
+                              </h4>
+                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                                <span>{theme.sessionCount} sessions</span>
+                                <span>•</span>
+                                <span>{theme.evidenceCount} evidence</span>
+                              </div>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={confidenceColor}
+                            >
+                              {confidencePercent}%
+                            </Badge>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

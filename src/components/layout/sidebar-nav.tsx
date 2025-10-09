@@ -1,9 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Home, FolderOpen, TrendingUp, MessageSquare, Settings } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  Home,
+  FolderOpen,
+  TrendingUp,
+  MessageSquare,
+  Settings,
+  Mic,
+} from "lucide-react";
 
 const navItems = [
   {
@@ -15,6 +22,11 @@ const navItems = [
     title: "Series",
     href: "/series",
     icon: FolderOpen,
+  },
+  {
+    title: "Sessions",
+    href: "/sessions",
+    icon: Mic,
   },
   {
     title: "Themes",
@@ -31,10 +43,10 @@ const navItems = [
     href: "/settings",
     icon: Settings,
   },
-]
+];
 
 export function SidebarNav() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <div className="space-y-4 py-4">
@@ -47,8 +59,9 @@ export function SidebarNav() {
         </div>
         <div className="space-y-1">
           {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
+            const Icon = item.icon;
+            const isActive =
+              pathname === item.href || pathname?.startsWith(item.href + "/");
 
             return (
               <Link
@@ -62,10 +75,10 @@ export function SidebarNav() {
                 <Icon className="mr-2 h-4 w-4" />
                 <span>{item.title}</span>
               </Link>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }
