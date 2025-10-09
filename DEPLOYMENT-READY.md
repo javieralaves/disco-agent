@@ -5,6 +5,7 @@
 Your pre-interview questions feature is now fully prepared for production deployment! Here's everything that's been configured:
 
 ### ✅ Code & Features
+
 - [x] Feature fully implemented and merged to `main`
 - [x] Database schema updated (2 new JSONB fields)
 - [x] All 8 implementation tasks complete
@@ -12,18 +13,21 @@ Your pre-interview questions feature is now fully prepared for production deploy
 - [x] Clean git history with descriptive commits
 
 ### ✅ Database Migrations
+
 - [x] Migration file created: `20251009193613_add_pre_interview_questions`
 - [x] SQL adds `preInterviewQuestions` to `series` table
 - [x] SQL adds `participantContext` to `sessions` table
 - [x] Migration lock file configured for PostgreSQL
 
 ### ✅ CI/CD Pipeline
+
 - [x] GitHub Actions workflow created: `.github/workflows/deploy-production.yml`
 - [x] Automated migration deployment on push to `main`
 - [x] Automatic Vercel deployment
 - [x] Prisma Client generation in CI
 
 ### ✅ Documentation
+
 - [x] Comprehensive deployment guide: `DEPLOYMENT-STEPS.md`
 - [x] GitHub secrets setup helper: `scripts/setup-github-secrets.sh`
 - [x] Deployment helper scripts in `package.json`
@@ -36,19 +40,20 @@ To complete the deployment, follow these steps:
 ### 1. Configure GitHub Secrets (5 minutes)
 
 Run the setup helper:
+
 ```bash
 npm run deploy:setup
 ```
 
 Then add these secrets to GitHub (Settings → Secrets and variables → Actions):
 
-| Secret Name | Where to Get It |
-|-------------|-----------------|
-| `DATABASE_URL` | Your Supabase/PostgreSQL connection string |
+| Secret Name           | Where to Get It                             |
+| --------------------- | ------------------------------------------- |
+| `DATABASE_URL`        | Your Supabase/PostgreSQL connection string  |
 | `DIRECT_DATABASE_URL` | Same as DATABASE_URL (or direct pooler URL) |
-| `VERCEL_TOKEN` | https://vercel.com/account/tokens |
-| `VERCEL_ORG_ID` | Vercel Project Settings → General |
-| `VERCEL_PROJECT_ID` | Vercel Project Settings → General |
+| `VERCEL_TOKEN`        | https://vercel.com/account/tokens           |
+| `VERCEL_ORG_ID`       | Vercel Project Settings → General           |
+| `VERCEL_PROJECT_ID`   | Vercel Project Settings → General           |
 
 **Quick Link to Add Secrets:**
 👉 https://github.com/javieralaves/disco-agent/settings/secrets/actions
@@ -56,6 +61,7 @@ Then add these secrets to GitHub (Settings → Secrets and variables → Actions
 ### 2. Verify Vercel Environment Variables
 
 Ensure these are set in Vercel (Settings → Environment Variables):
+
 - `DATABASE_URL`
 - `DIRECT_DATABASE_URL`
 - `OPENAI_API_KEY`
@@ -74,6 +80,7 @@ The deployment will happen automatically when you push to `main`:
 ```
 
 Or manually trigger:
+
 ```bash
 # From GitHub
 # Go to: Actions → Deploy to Production → Run workflow
@@ -85,18 +92,20 @@ vercel --prod
 ### 4. Verify Deployment (After Deploy)
 
 **Check Database:**
+
 ```sql
 -- Verify new columns exist
-SELECT column_name, data_type 
-FROM information_schema.columns 
+SELECT column_name, data_type
+FROM information_schema.columns
 WHERE table_name = 'series' AND column_name = 'preInterviewQuestions';
 
-SELECT column_name, data_type 
-FROM information_schema.columns 
+SELECT column_name, data_type
+FROM information_schema.columns
 WHERE table_name = 'sessions' AND column_name = 'participantContext';
 ```
 
 **Test the Feature:**
+
 1. Create a new research series
 2. Verify Step 4 appears: "Pre-Interview Questions"
 3. Test AI question generation
@@ -105,6 +114,7 @@ WHERE table_name = 'sessions' AND column_name = 'participantContext';
 6. Start interview and verify AI uses context
 
 **Monitor Logs:**
+
 ```bash
 # View deployment logs
 vercel logs --prod
@@ -125,17 +135,20 @@ When you push to `main`, GitHub Actions automatically:
 ## 🔄 Rollback Plan (If Needed)
 
 ### Quick Vercel Rollback:
+
 1. Go to Vercel dashboard
 2. Find previous deployment
 3. Click "Promote to Production"
 
 ### Database Rollback:
+
 ```sql
 ALTER TABLE "series" DROP COLUMN IF EXISTS "preInterviewQuestions";
 ALTER TABLE "sessions" DROP COLUMN IF EXISTS "participantContext";
 ```
 
 ### Code Rollback:
+
 ```bash
 git revert HEAD
 git push origin main
@@ -153,17 +166,20 @@ git push origin main
 ## 🆘 Need Help?
 
 **Documentation:**
+
 - Full deployment guide: `DEPLOYMENT-STEPS.md`
 - Setup script: `npm run deploy:setup`
 - Check workflow: `.github/workflows/deploy-production.yml`
 
 **Troubleshooting:**
+
 - Check GitHub Actions logs
 - Check Vercel deployment logs
 - Review migration SQL in `prisma/migrations/`
 - See DEPLOYMENT-STEPS.md → Troubleshooting section
 
 **Quick Commands:**
+
 ```bash
 # Verify build works locally
 npm run deploy:check
@@ -178,6 +194,7 @@ npm run db:migrate:deploy
 ## 🎯 Success Criteria
 
 Your deployment is successful when:
+
 - [x] Code merged to `main`
 - [ ] GitHub Actions runs successfully
 - [ ] Database migrations applied
@@ -195,4 +212,3 @@ Your deployment is successful when:
 **Next Action:** Configure GitHub secrets → Deploy automatically triggers
 
 🚀 **You're all set! Configure the secrets and the deployment will happen automatically.**
-
