@@ -194,7 +194,7 @@ export default function NewSeriesPage() {
               <QuestionsStep
                 data={seriesData}
                 onUpdate={handleUpdateData}
-                onComplete={handleNext}
+                onNext={handleNext}
                 onBack={handleBack}
               />
             )}

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  Check,
+  ArrowRight,
   Plus,
   X,
   Sparkles,
@@ -23,14 +23,14 @@ interface Question {
 interface QuestionsStepProps {
   data: any;
   onUpdate: (data: any) => void;
-  onComplete: (questions?: any[]) => void;
+  onNext: () => void;
   onBack: () => void;
 }
 
 export function QuestionsStep({
   data,
   onUpdate,
-  onComplete,
+  onNext,
   onBack,
 }: QuestionsStepProps) {
   const [questions, setQuestions] = useState<Question[]>(data.questions || []);
@@ -38,7 +38,6 @@ export function QuestionsStep({
   const [selectedGoal, setSelectedGoal] = useState(data.researchGoals[0] || "");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isCompleting, setIsCompleting] = useState(false);
 
   // Auto-generate questions on mount if none exist
   useEffect(() => {
@@ -92,20 +91,15 @@ export function QuestionsStep({
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const handleComplete = async () => {
-    setIsCompleting(true);
-    console.log("🔍 QuestionsStep - handleComplete called");
+  const handleNext = () => {
+    console.log("🔍 QuestionsStep - handleNext called");
     console.log("  - Questions to save:", questions.length);
 
     // Update parent state with questions
     onUpdate({ questions });
 
-    // Small delay for UI feedback
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setIsCompleting(false);
-
-    // Pass questions directly to avoid race condition
-    onComplete(questions);
+    // Move to next step (pre-interview questions)
+    onNext();
   };
 
   // Group questions by goal
@@ -261,21 +255,12 @@ export function QuestionsStep({
           Back
         </Button>
         <Button
-          onClick={handleComplete}
-          disabled={questions.length === 0 || isCompleting}
+          onClick={handleNext}
+          disabled={questions.length === 0}
           size="lg"
         >
-          {isCompleting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Series...
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Create Series
-            </>
-          )}
+          Continue to Pre-Interview Questions
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
