@@ -6,6 +6,13 @@ echo "🗄️  Running Database Migrations"
 echo "================================"
 echo ""
 
+# Load .env file if it exists
+if [ -f .env ]; then
+  echo "📄 Loading environment variables from .env"
+  export $(cat .env | grep -v '^#' | xargs)
+  echo ""
+fi
+
 # Check if environment variables are set
 if [ -z "$DATABASE_URL" ] || [ -z "$DIRECT_DATABASE_URL" ]; then
   echo "❌ Error: DATABASE_URL and DIRECT_DATABASE_URL must be set"
