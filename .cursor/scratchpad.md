@@ -8,6 +8,178 @@ Disco is feature-complete for MVP and ready to deploy to Vercel. All core featur
 
 ---
 
+## 📋 NEW FEATURE: Pre-Interview Context Questions ✅ COMPLETE
+
+### Feature Overview
+
+Add customizable pre-interview questions to give interviewers insight into participants before the interview begins. Questions are defined during series creation and presented to participants in the consent form. The AI moderator adapts its introduction based on participant responses.
+
+### ✨ Implementation Summary
+
+**Status: FULLY IMPLEMENTED** - All 8 tasks complete, ready for testing
+
+**What Was Built:**
+
+1. ✅ Database schema extended with `preInterviewQuestions` (Series) and `participantContext` (Session)
+2. ✅ AI-powered question generation API endpoint
+3. ✅ New Step 4 in series creation wizard with auto-generation
+4. ✅ Dynamic pre-interview questions in consent form
+5. ✅ Participant context saved to database
+6. ✅ AI moderator adapts intro based on participant responses
+7. ✅ Optional fields - participants can skip any question
+8. ✅ Zero linter errors, consistent with existing design patterns
+
+**How It Works:**
+
+- Series creators see a new Step 4: "Pre-Interview Questions"
+- AI generates 2-3 contextual questions (editable/removable/add more)
+- Participants see questions in consent form (optional to answer)
+- AI receives context and starts with warm acknowledgment
+- AI asks concrete, situated questions based on participant info
+
+### Action Plan
+
+#### **Task 1: Database Schema Updates** ✅ COMPLETE
+
+- Add `preInterviewQuestions` field to Series model (JSON array)
+- Add `participantContext` field to Session model (JSON object to store answers)
+- Create and run Prisma migration
+
+**Success Check:** Schema updated, migration applied successfully
+
+---
+
+#### **Task 2: API - Generate Pre-Interview Questions** ✅ COMPLETE
+
+- Create `/api/series/generate-pre-interview-questions` endpoint
+- Use GPT-4o to generate 2-3 relevant pre-screening questions based on research focus
+- Return questions array in format: `[{ id, question, placeholder }]`
+
+**Success Check:** ✅ API generates contextually relevant questions
+
+---
+
+#### **Task 3: Series Creation - Add Pre-Interview Questions Step** ✅ COMPLETE
+
+- Create new step component: `src/app/series/new/steps/pre-interview-questions.tsx`
+- Auto-generate questions on mount (similar to research-goals step)
+- Allow add/edit/remove questions
+- Show microcopy: "This helps tailor the interview to you."
+- Add this as Step 4 in the wizard (after Questions step)
+
+**Success Check:** ✅ Can add/edit pre-interview questions in series creation
+
+---
+
+#### **Task 4: Update Series Creation Flow** ✅ COMPLETE
+
+- Update `src/app/series/new/page.tsx` to include Step 4
+- Update progress bar to show 4 steps instead of 3
+- Pass `preInterviewQuestions` to `/api/series/create`
+- Update API to save questions to database
+
+**Success Check:** ✅ Pre-interview questions saved with series
+
+---
+
+#### **Task 5: Update Consent Form** ✅ COMPLETE
+
+- Modify `src/app/interview/[inviteCode]/consent-form.tsx`
+- Fetch series with pre-interview questions
+- Render dynamic input fields for each question (optional fields)
+- Add microcopy: "This helps tailor the interview to you."
+- Pass answers to `/api/interview/consent`
+
+**Success Check:** ✅ Participants can answer pre-interview questions
+
+---
+
+#### **Task 6: Update Consent API** ✅ COMPLETE
+
+- Modify `/api/interview/consent/route.ts`
+- Accept `participantContext` parameter (answers to pre-interview questions)
+- Save to `session.participantContext` field
+
+**Success Check:** ✅ Participant context saved to session
+
+---
+
+#### **Task 7: Adapt AI Moderator Instructions** ✅ COMPLETE
+
+- Modify `/api/realtime/session/route.ts`
+- Update `buildInterviewInstructions()` function
+- Include participant context when available
+- Add prompt guidance: "Start by acknowledging participant details (max 1 sentence). Ask concrete, situated questions. Avoid generic prompts. Prefer 'tell me about the last time...'"
+- If no context: use default flow
+
+**Success Check:** ✅ AI acknowledges participant context in warm intro
+
+---
+
+#### **Task 8: UI Polish & Testing** ✅ COMPLETE
+
+- Ensure consistent styling across new components
+- No linter errors found
+- Handle edge cases (no questions, skipped answers, optional fields)
+- All components follow existing design patterns
+
+**Success Check:** ✅ Feature implemented end-to-end with good UX
+
+---
+
+### Implementation Details
+
+**Database Changes:**
+
+```prisma
+model Series {
+  // ... existing fields
+  preInterviewQuestions Json? // Array of { id, question, placeholder }
+}
+
+model Session {
+  // ... existing fields
+  participantContext Json? // Object with question IDs as keys, answers as values
+}
+```
+
+**Question Generation Prompt:**
+
+- Generate 2-3 questions that help understand participant background
+- Questions should be open-ended, non-discriminatory
+- Focus on relevant experience/context for the research topic
+- Return format: `[{ id: string, question: string, placeholder: string }]`
+
+**AI Prompt Enhancement:**
+
+```
+You have series_context and participant_context:
+
+[If participant_context exists]
+Participant shared: {summarize key details from context}
+
+Start by warmly acknowledging these details (max 1 sentence). Then ask concrete, situated questions based on what they shared. Avoid generic "what do you think of..." prompts. Prefer "tell me about the last time..." or "walk me through when..."
+
+[If no participant_context]
+Follow the standard interview flow.
+```
+
+---
+
+### Files to Modify
+
+1. ✅ `prisma/schema.prisma` - Add fields
+2. ✅ `src/app/api/series/generate-pre-interview-questions/route.ts` - New file
+3. ✅ `src/app/series/new/steps/pre-interview-questions.tsx` - New file
+4. ✅ `src/app/series/new/page.tsx` - Add Step 4
+5. ✅ `src/app/api/series/create/route.ts` - Accept preInterviewQuestions
+6. ✅ `src/app/interview/[inviteCode]/consent-form.tsx` - Add question fields
+7. ✅ `src/app/interview/[inviteCode]/page.tsx` - Pass questions to consent form
+8. ✅ `src/app/api/interview/consent/route.ts` - Save participantContext
+9. ✅ `src/app/api/realtime/session/route.ts` - Adapt AI instructions
+
+---
+
 ## Completed Work Summary
 
 Phases 1-5 are complete, with additional polish and improvements. The platform now includes:

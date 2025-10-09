@@ -16,11 +16,18 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, ChevronRight } from "lucide-react";
 
+interface PreInterviewQuestion {
+  id: string;
+  question: string;
+  placeholder: string;
+}
+
 interface ConsentFormProps {
   seriesId: string;
   inviteCode: string;
   consentText: string;
   consentVersion: number;
+  preInterviewQuestions?: PreInterviewQuestion[];
 }
 
 export function ConsentForm({
@@ -28,12 +35,16 @@ export function ConsentForm({
   inviteCode,
   consentText,
   consentVersion,
+  preInterviewQuestions = [],
 }: ConsentFormProps) {
   const router = useRouter();
   const [participantName, setParticipantName] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preInterviewAnswers, setPreInterviewAnswers] = useState<
+    Record<string, string>
+  >({});
 
   const handleSubmit = async () => {
     if (!agreed) {
@@ -52,6 +63,7 @@ export function ConsentForm({
           seriesId,
           consentVersion,
           participantName: participantName.trim() || undefined,
+          participantContext: preInterviewAnswers,
         }),
       });
 
@@ -120,6 +132,38 @@ export function ConsentForm({
             This helps us organize and reference your interview
           </p>
         </div>
+
+        {/* Pre-Interview Questions */}
+        {preInterviewQuestions.length > 0 && (
+          <div className="space-y-4 rounded-lg border bg-gray-50 p-4">
+            <div>
+              <h3 className="font-medium">A Few Quick Questions</h3>
+              <p className="text-sm text-muted-foreground">
+                This helps tailor the interview to you. These are optional.
+              </p>
+            </div>
+            {preInterviewQuestions.map((question) => (
+              <div key={question.id} className="space-y-2">
+                <Label htmlFor={question.id} className="text-sm font-medium">
+                  {question.question}
+                </Label>
+                <Input
+                  id={question.id}
+                  type="text"
+                  placeholder={question.placeholder}
+                  value={preInterviewAnswers[question.id] || ""}
+                  onChange={(e) =>
+                    setPreInterviewAnswers({
+                      ...preInterviewAnswers,
+                      [question.id]: e.target.value,
+                    })
+                  }
+                  className="w-full"
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Consent Checkbox */}
         <div className="flex items-start space-x-3 rounded-lg border bg-white p-4">

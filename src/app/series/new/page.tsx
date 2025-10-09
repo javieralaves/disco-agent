@@ -15,6 +15,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { ResearchFocusStep } from "./steps/research-focus";
 import { ResearchGoalsStep } from "./steps/research-goals";
 import { QuestionsStep } from "./steps/questions";
+import { PreInterviewQuestionsStep } from "./steps/pre-interview-questions";
 
 const STEPS = [
   {
@@ -24,6 +25,11 @@ const STEPS = [
   },
   { id: 2, title: "Research Goals", description: "AI-generated objectives" },
   { id: 3, title: "Questions", description: "Interview questions per goal" },
+  {
+    id: 4,
+    title: "Pre-Interview Questions",
+    description: "Gather participant context",
+  },
 ];
 
 export default function NewSeriesPage() {
@@ -40,6 +46,7 @@ export default function NewSeriesPage() {
     },
     researchGoals: [],
     questions: [],
+    preInterviewQuestions: [],
   });
 
   const progress = (currentStep / STEPS.length) * 100;
@@ -60,17 +67,23 @@ export default function NewSeriesPage() {
     setSeriesData({ ...seriesData, ...data });
   };
 
-  const handleComplete = async (finalQuestions?: any[]) => {
+  const handleComplete = async (finalPreInterviewQuestions?: any[]) => {
     try {
-      // Use the provided questions or fall back to seriesData.questions
+      // Use the provided pre-interview questions or fall back to seriesData
       const dataToSend = {
         ...seriesData,
-        questions:
-          finalQuestions !== undefined ? finalQuestions : seriesData.questions,
+        preInterviewQuestions:
+          finalPreInterviewQuestions !== undefined
+            ? finalPreInterviewQuestions
+            : seriesData.preInterviewQuestions,
       };
 
       console.log("🚀 Wizard - handleComplete called");
       console.log("  - Final data questions:", dataToSend.questions?.length);
+      console.log(
+        "  - Pre-interview questions:",
+        dataToSend.preInterviewQuestions?.length
+      );
 
       const response = await fetch("/api/series/create", {
         method: "POST",
@@ -179,6 +192,14 @@ export default function NewSeriesPage() {
             )}
             {currentStep === 3 && (
               <QuestionsStep
+                data={seriesData}
+                onUpdate={handleUpdateData}
+                onComplete={handleNext}
+                onBack={handleBack}
+              />
+            )}
+            {currentStep === 4 && (
+              <PreInterviewQuestionsStep
                 data={seriesData}
                 onUpdate={handleUpdateData}
                 onComplete={handleComplete}

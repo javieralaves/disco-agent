@@ -24,6 +24,7 @@ export async function POST(req: Request) {
             researchFocus: true,
             researchGoals: true,
             questions: true,
+            preInterviewQuestions: true,
           },
         },
       },
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
           model: "gpt-4o-realtime-preview-2024-12-17",
           voice: "verse",
           // Instructions for the AI interviewer
-          instructions: buildInterviewInstructions(session.series),
+          instructions: buildInterviewInstructions(session.series, session),
           // Turn detection configuration
           turn_detection: {
             type: "server_vad",
@@ -112,14 +113,21 @@ export async function POST(req: Request) {
 }
 
 /**
- * Builds interviewer instructions from series data
+ * Builds interviewer instructions from series data and participant context
  */
-function buildInterviewInstructions(series: {
-  title: string;
-  researchFocus: string;
-  researchGoals: any;
-  questions: any;
-}): string {
+function buildInterviewInstructions(
+  series: {
+    title: string;
+    researchFocus: string;
+    researchGoals: any;
+    questions: any;
+    preInterviewQuestions: any;
+  },
+  session: {
+    participantName?: string | null;
+    participantContext?: any;
+  }
+): string {
   const goals = Array.isArray(series.researchGoals)
     ? series.researchGoals.join("\n- ")
     : "";
@@ -130,7 +138,48 @@ function buildInterviewInstructions(series: {
         .join("\n")
     : "";
 
-  return `You are an empathetic and skilled qualitative research interviewer conducting a user research interview titled "${series.title}".
+  // Build participant context summary
+  let participantContextSection = "";
+  if (
+    session.participantContext &&
+    typeof session.participantContext === "object"
+  ) {
+    const preInterviewQuestions = Array.isArray(series.preInterviewQuestions)
+      ? series.preInterviewQuestions
+      : [];
+
+    const contextDetails: string[] = [];
+
+    // Add participant name if available
+    if (session.participantName) {
+      contextDetails.push(`Name: ${session.participantName}`);
+    }
+
+    // Add answers to pre-interview questions
+    preInterviewQuestions.forEach((q: any) => {
+      const answer = session.participantContext[q.id];
+      if (answer && answer.trim()) {
+        contextDetails.push(`${q.question}: ${answer}`);
+      }
+    });
+
+    if (contextDetails.length > 0) {
+      participantContextSection = `
+
+## Participant Context
+The participant shared the following information before the interview:
+${contextDetails.map((detail) => `- ${detail}`).join("\n")}
+
+**Important Instructions for Using This Context:**
+1. Start your first message with a warm acknowledgment of their details (max 1 sentence). For example: "Thanks for sharing that you're a [role] - that's really helpful context!"
+2. Use their context to ask CONCRETE, SITUATED questions. Instead of "What do you think about X?", ask "Tell me about the last time you [did something related to their context]..."
+3. Build on what they shared. If they mentioned a specific role or experience, dive into that with follow-up questions.
+4. Avoid generic prompts. Every question should feel tailored to their specific situation.
+`;
+    }
+  }
+
+  return `You are an empathetic and skilled qualitative research interviewer conducting a user research interview titled "${series.title}".${participantContextSection}
 
 ## Research Focus
 ${series.researchFocus}

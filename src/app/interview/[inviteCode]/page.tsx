@@ -152,6 +152,9 @@ export default async function InterviewLandingPage({ params }: PageProps) {
             inviteCode={inviteCode}
             consentText={series.consentText}
             consentVersion={series.consentVersion}
+            preInterviewQuestions={
+              (series.preInterviewQuestions as any[]) || []
+            }
           />
 
           {/* Mic Check */}

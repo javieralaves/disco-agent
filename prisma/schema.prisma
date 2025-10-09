@@ -94,12 +94,13 @@ model Series {
   questions     Json // Array of question objects grouped by goal
 
   // Settings
-  inviteLink     String  @unique @default(cuid())
-  consentText    String  @db.Text
-  consentVersion Int     @default(1)
-  retentionDays  Int     @default(365)
-  isTrusted      Boolean @default(false) // Skip human-in-loop for actions
-  language       String  @default("en")
+  inviteLink            String  @unique @default(cuid())
+  consentText           String  @db.Text
+  consentVersion        Int     @default(1)
+  retentionDays         Int     @default(365)
+  isTrusted             Boolean @default(false) // Skip human-in-loop for actions
+  language              String  @default("en")
+  preInterviewQuestions Json? // Array of { id, question, placeholder } objects
 
   // Metadata
   status           SeriesStatus @default(ACTIVE)
@@ -134,9 +135,10 @@ model Session {
   series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
 
   // Participant info
-  participantName  String?
-  participantEmail String?
-  participantId    String? // Anonymous ID for tracking without PII
+  participantName    String?
+  participantEmail   String?
+  participantId      String? // Anonymous ID for tracking without PII
+  participantContext Json? // Answers to pre-interview questions { questionId: answer }
 
   // Session metadata
   status      SessionStatus @default(SCHEDULED)
