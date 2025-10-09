@@ -733,3 +733,41 @@ These will be prioritized based on user feedback after initial deployment.
 **Total MVP**: ~16 working days completed
 
 **Next**: Production deployment → User feedback → Iterate
+
+---
+
+## Action Plan: Fix Theme Generation Routing Bug (DIS-18)
+
+### Problem Analysis
+- **Current behavior**: After generating themes, user is redirected to `/dashboard/themes` (old route)
+- **Expected behavior**: Stay on series detail page and smooth scroll to the themes section
+- **Root cause**: Line 40 in `src/components/generate-themes-button.tsx` uses `router.push("/dashboard/themes")`
+
+### Tasks
+- [ ] Update `generate-themes-button.tsx` to refresh page instead of redirecting
+- [ ] Add ID to themes section in series detail page for scroll target
+- [ ] Implement smooth scroll to themes section after generation
+- [ ] Test the complete flow: generate themes → smooth scroll to themes
+
+### Success Criteria
+- ✅ Themes generate successfully
+- ✅ Page stays on series detail view
+- ✅ Smooth scroll to themes section occurs automatically
+- ✅ Newly generated themes are visible
+
+---
+
+## Progress
+
+### DIS-18: Fix Theme Generation Routing Bug
+- [x] Add ID to themes section for scroll targeting
+- [x] Update button to refresh and scroll instead of redirecting
+- [x] Verified TypeScript and linting passes
+
+**Summary:**
+- Added `id="themes-section"` to the themes card in series detail page
+- Removed redirect to `/dashboard/themes` (old route)
+- Implemented `router.refresh()` to reload the page with new themes
+- Added smooth scroll to themes section with 500ms delay for refresh
+- Fixed linting issue by removing unused `data` variable
+- All TypeScript checks and linting passes ✅

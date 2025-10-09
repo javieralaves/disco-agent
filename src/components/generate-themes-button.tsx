@@ -34,11 +34,16 @@ export function GenerateThemesButton({
         throw new Error(data.error || "Failed to generate themes");
       }
 
-      const data = await response.json();
-
-      // Navigate to themes page to show results
-      router.push("/dashboard/themes");
+      // Refresh the page to show newly generated themes
       router.refresh();
+      
+      // Smooth scroll to the themes section
+      setTimeout(() => {
+        const themesSection = document.getElementById("themes-section");
+        if (themesSection) {
+          themesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 500); // Small delay to ensure page has refreshed
     } catch (err) {
       console.error("Error generating themes:", err);
       setError(
