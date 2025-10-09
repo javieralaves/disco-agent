@@ -5,7 +5,8 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { seriesId, consentVersion, participantName } = await req.json();
+    const { seriesId, consentVersion, participantName, participantContext } =
+      await req.json();
 
     if (!seriesId || consentVersion === undefined) {
       return NextResponse.json(
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
         seriesId,
         participantId,
         participantName: participantName || undefined,
+        participantContext: participantContext || undefined,
         consentVersion,
         consentGivenAt: new Date(),
         status: SessionStatus.SCHEDULED, // Will become IN_PROGRESS when interview starts
@@ -50,6 +52,10 @@ export async function POST(req: Request) {
 
     console.log("✅ Session created:", session.id);
     console.log("  - Participant ID:", participantId);
+    console.log(
+      "  - Participant context:",
+      participantContext ? "present" : "none"
+    );
     console.log("  - Consent version:", consentVersion);
 
     return NextResponse.json({

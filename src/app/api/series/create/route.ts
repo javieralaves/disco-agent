@@ -12,13 +12,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, researchFocus, context, researchGoals, questions } =
-      await req.json();
+    const {
+      title,
+      researchFocus,
+      context,
+      researchGoals,
+      questions,
+      preInterviewQuestions,
+    } = await req.json();
 
     console.log("📝 Creating series with data:");
     console.log("  - Title:", title);
     console.log("  - Research Goals:", researchGoals?.length);
     console.log("  - Questions:", questions?.length);
+    console.log("  - Pre-Interview Questions:", preInterviewQuestions?.length);
     console.log("  - Questions preview:", questions?.slice(0, 2));
 
     if (!title || !researchFocus || !researchGoals || !questions) {
@@ -49,6 +56,7 @@ export async function POST(req: Request) {
         context: context || {},
         researchGoals: researchGoals || [],
         questions: questions || [],
+        preInterviewQuestions: preInterviewQuestions || [],
         inviteLink: inviteCode,
         status: "DRAFT",
         language: "en",
