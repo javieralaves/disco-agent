@@ -371,30 +371,35 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 ## Recent Updates & Polish (Pre-Deployment)
 
 ### ✅ Navigation & Routing Improvements
+
 - Moved `/dashboard/themes` → `/themes` for cleaner URLs
-- Moved `/dashboard/sessions` → `/sessions` 
+- Moved `/dashboard/sessions` → `/sessions`
 - Created `/series` list page
 - Added consistent dashboard layout to all pages
 - Updated all internal links to new routes
 
 ### ✅ Series Management Enhancements
+
 - Series status toggle (DRAFT ↔ ACTIVE) from UI
 - Sessions list in series detail page
 - Themes list in series detail page
 - Conditional theme generation (requires 2+ sessions)
 
 ### ✅ Interview Flow Improvements
+
 - Participant name capture in consent form
 - Auto-scroll transcript with "Jump to Bottom" button
 - Fixed research goals flickering issue
 - Enhanced audio quality and echo cancellation
 
 ### ✅ Automation Features
+
 - Auto-summarization after interview completion (background)
 - Sequential turn saving queue (prevents race conditions)
 - Improved AI response handling
 
 ### ✅ Production Readiness
+
 - Build scripts updated for Vercel (Prisma generation)
 - Comprehensive deployment documentation
 - Helper scripts for deployment preparation
@@ -405,18 +410,21 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 ## Progress Summary
 
 ### ✅ Phase 1: Foundation & Infrastructure - COMPLETE
+
 - Database setup with Prisma & PostgreSQL
 - Authentication with NextAuth.js & GitHub OAuth
 - Environment configuration
 - Core UI layout with responsive navigation
 
 ### ✅ Phase 2: Series Creation - COMPLETE
+
 - Multi-step wizard (Research Focus → Goals → Questions)
 - AI-powered goal generation (GPT-4o)
 - AI-powered question generation
 - Series dashboard with invite links
 
 ### ✅ Phase 3: Interview Capture - COMPLETE
+
 - Participant landing page with consent
 - OpenAI Realtime API integration
 - WebRTC real-time interview interface
@@ -425,6 +433,7 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 - Session completion flow
 
 ### ✅ Phase 4: Session Summarization - COMPLETE
+
 - GPT-4o powered session summarization
 - Structured insights (Problems/Goals/Friction/Opportunities)
 - Highlight extraction
@@ -433,6 +442,7 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 - Auto-summarization after interviews
 
 ### ✅ Phase 5: Theme Synthesis - COMPLETE
+
 - Cross-session pattern analysis with GPT-4o
 - Multi-factor confidence scoring
 - Evidence extraction with quote traceability
@@ -446,15 +456,18 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 ### Manual Steps Required (User Action)
 
 1. **Generate Production Secrets**
+
    ```bash
    openssl rand -base64 32  # For NEXTAUTH_SECRET
    ```
 
 2. **Create Production GitHub OAuth App**
+
    - Go to: https://github.com/settings/developers
    - Create new OAuth app with production callback URL
 
 3. **Deploy to Vercel**
+
    - Import repository at https://vercel.com/new
    - Add environment variables
    - Deploy
@@ -471,12 +484,14 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 ## 🔄 Post-MVP Roadmap (Future Phases)
 
 ### Phase 6: RAG-Powered Chat (Future)
+
 - Chat interface with scope selector (series/session/theme)
 - Vector search over turns and highlights
 - GPT-4o with RAG for accurate, cited answers
 - Citation linking to specific turns
 
 ### Phase 7: Advanced Features (Future)
+
 - Audio storage with encryption (Supabase)
 - Embeddings for semantic search (pgvector)
 - Background job queue (Inngest)
@@ -484,18 +499,21 @@ Phases 1-5 are complete, with additional polish and improvements. The platform n
 - Custom domain support
 
 ### Phase 8: Integrations & Actions (Future)
+
 - Slack integration for sharing insights
 - MCP server setup
 - Action tracking and audit logs
 - Human-in-the-loop confirmations
 
 ### Phase 9: Enhanced Security (Future)
+
 - Advanced PII redaction with GPT-4o
 - Consent versioning and withdrawal
 - Data retention policy automation
 - Encryption at rest for audio
 
 ### Phase 10: Quality & Monitoring (Future)
+
 - OpenAI Evals for summary quality
 - Structured logging and tracing
 - Quality metrics dashboard
